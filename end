@@ -1,0 +1,17 @@
+[33mcommit 1daf377c0aaaedd2575cb28af3e4e2584253849b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: vngyyn <tranvnguyen0910@gmail.com>
+Date:   Sat Apr 11 20:39:23 2026 +0700
+
+    feat(embeddings): implement embedding model and FAISS vector builder
+
+[33mcommit 351f90c3cea80fa7d010e833984f285eab71399d[m
+Author: vngyyn <tranvnguyen0910@gmail.com>
+Date:   Sat Apr 11 20:32:54 2026 +0700
+
+    feat(data_pipeline): implement text cleaning and chunking pipeline.
+
+[33mcommit 24880356cba7eb9f3b0b36c53f056a7fe61b8915[m
+Author: vngyyn <tranvnguyen0910@gmail.com>
+Date:   Thu Apr 9 21:58:08 2026 +0700
+
+    init chatbot structure
