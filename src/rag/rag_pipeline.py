@@ -4,6 +4,7 @@ from src.retriever.reranker import Reranker
 from src.prompt.prompt_template import PromptTemplate
 from src.llm.groq_client import GroqClient
 from src.embeddings.embedding_model import EmbeddingModel
+from src.memory.chat_memory import ChatMemory
 
 
 class RAGPipeline:
@@ -35,8 +36,8 @@ class RAGPipeline:
         # LLM client
         self.llm = GroqClient()
 
-        # Chat history
-        self.history = []
+        # Chat memory
+        self.memory = ChatMemory()
 
     def ask(self, query: str):
 
@@ -50,14 +51,14 @@ class RAGPipeline:
         prompt = self.prompt_builder.build_prompt(
             query=query,
             contexts=docs,
-            history=self.history
+            history=self.memory.get_history()
         )
 
         # 4 generate answer
         answer = self.llm.generate(prompt)
 
         # 5 save history
-        self.history.append({"role": "user", "content": query})
-        self.history.append({"role": "assistant", "content": answer})
+        self.memory.add_user_message(query)
+        self.memory.add_assistant_message(answer)
 
         return answer
