@@ -1,25 +1,24 @@
-from src.data_pipeline.loader import Loader
-from src.data_pipeline.cleaner import Cleaner
-from src.data_pipeline.chunker import TextSplitter
-from src.embeddings.embedder import Embedder
-def main():
-    # Load data
-    input_folder_path = "data/raw"
-    output_folder_path = "data/processed"
-    loader = Loader(input_folder_path)
-    raw_data = loader.load_documents()
-    markdown = ""
-    for item in raw_data:
-        markdown += Cleaner.json_to_markdown(item)
-    
-    text_chunker = TextSplitter(chunk_size=1200, chunk_overlap=200)
-    all_chunks = text_chunker.split(markdown)
+from src.rag.rag_pipeline import RAGPipeline
 
-    text_chunker.save_to_json(all_chunks, f"{output_folder_path}/chunks.json")
-def embedding():
-    embedder = Embedder()
-    chunks_path = "data/processed/chunks.json"
-    embedder.build_vector_db(chunks_path)
+
+def main():
+
+    rag = RAGPipeline()
+
+    print("RAG Chatbot ready. Type 'exit' to quit.\n")
+
+    while True:
+
+        query = input("You: ")
+
+        if query.lower() in ["exit", "quit"]:
+            break
+
+        answer = rag.ask(query)
+
+        print("\nBot:", answer)
+        print()
+
 
 if __name__ == "__main__":
-    embedding()
+    main()
