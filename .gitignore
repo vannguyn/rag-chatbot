@@ -1,2 +1,23 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data folder
+data/
+
+# Vector database
+vector_store/
+
+# Model files
+models/
+
+# Environment
 .env
-.env.*
+venv/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
