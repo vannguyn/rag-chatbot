@@ -17,3 +17,4 @@ langchain-huggingface
 streamlit
 faiss-cpu
 numpy
+groq

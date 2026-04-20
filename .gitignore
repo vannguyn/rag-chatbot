@@ -2,19 +2,45 @@
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
 # Virtual env
+env/
 venv/
 .venv/
+chatbot_env/
+
+# Micromamba / Conda
+.mamba/
+conda-meta/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
 
 # Data
 data/
+*.csv
+*.json
 
-# Embedding models
-embeddings/
+# HuggingFace cache
+.cache/
+huggingface/
+
+# Secrets
+.env
+
+# Build
+dist/
+build/
 
 # Vector database
-vectorstore/
+vector_db/
 
-# Environment
-.env
+test.py

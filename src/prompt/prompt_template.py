@@ -6,20 +6,16 @@ class PromptTemplate:
     def __init__(self):
         pass
 
-    def build_prompt(self, query: str, contexts: list[str], history: list = None) -> str:
-        """
-        Build prompt for LLM
+    def build_prompt(self, query, contexts, history):
+        processed_contexts = []
 
-        Args:
-            query (str): user question
-            contexts (list[str]): retrieved documents
-            history (list): previous chat messages
+        for c in contexts:
+            if isinstance(c, dict):
+                processed_contexts.append(c["text"])
+            else:
+                processed_contexts.append(c)
 
-        Returns:
-            str: final prompt
-        """
-
-        context_text = "\n\n".join(contexts)
+        context_text = "\n\n".join(processed_contexts)
 
         history_text = ""
         if history:
