@@ -2,7 +2,6 @@ import os
 import json
 
 from src.data_pipeline.loader import Loader
-from src.data_pipeline.cleaner import Cleaner
 from src.data_pipeline.chunker import TextSplitter
 from src.embeddings.embedder import Embedder
 
@@ -14,92 +13,74 @@ CHUNKS_PATH = "data/processed/chunks.json"
 class VectorDBPipeline:
 
     def __init__(self):
-
         self.loader = Loader(RAW_DATA_FOLDER)
         self.splitter = TextSplitter()
         self.embedder = Embedder()
 
     # -----------------------------
-    # Step 1: Load + Convert JSON
+    # Step 1: Load + Split (DUY NHẤT 1 LẦN)
     # -----------------------------
-
     def load_and_prepare_documents(self):
-
         print("Loading JSON documents...")
 
-        documents = self.loader.load_documents()
+        raw_data = self.loader.load_documents()
 
-        texts = []
+        docs = []
 
-        for item in documents:
+        for item in raw_data:
+            # 🔥 split trực tiếp từ JSON → Document
+            chunks = self.splitter.split(item)
+            docs.extend(chunks)
 
-            markdown = Cleaner.json_to_markdown(item)
+        print(f"Loaded {len(docs)} documents")
 
-            texts.append(markdown)
-
-        print(f"Total documents: {len(texts)}")
-
-        return texts
-
-    # -----------------------------
-    # Step 2: Chunk documents
-    # -----------------------------
-
-    def split_documents(self, texts):
-
-        print("Splitting documents into chunks...")
-
-        chunks = []
-
-        for text in texts:
-
-            docs = self.splitter.split(text)
-
-            for doc in docs:
-
-                chunks.append({
-                    "content": doc.page_content,
-                    "metadata": doc.metadata
-                })
-
-        print(f"Total chunks: {len(chunks)}")
-
-        return chunks
+        return docs
 
     # -----------------------------
-    # Step 3: Save chunks
+    # Step 2: Save chunks.json
     # -----------------------------
-
-    def save_chunks(self, chunks):
-
+    def save_chunks(self, docs):
         os.makedirs(os.path.dirname(CHUNKS_PATH), exist_ok=True)
 
+        data = []
+
+        for doc in docs:
+            data.append({
+                "content": doc.page_content,   # 👉 text để embed
+                "metadata": doc.metadata      # 👉 full info (đã bỏ review)
+            })
+
         with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
-            json.dump(chunks, f, ensure_ascii=False, indent=4)
+            json.dump(data, f, ensure_ascii=False, indent=4)
 
         print(f"Chunks saved → {CHUNKS_PATH}")
 
     # -----------------------------
+    # Step 3: Build Vector DB
+    # -----------------------------
+    def build_vector_db(self):
+        print("Building vector database...")
+        self.embedder.build_vector_db(CHUNKS_PATH)
+
+    # -----------------------------
     # Pipeline
     # -----------------------------
-
     def run(self):
+        # ✅ 1. load + split
+        docs = self.load_and_prepare_documents()
 
-        texts = self.load_and_prepare_documents()
+        if len(docs) == 0:
+            raise ValueError("❌ No documents found. Check your raw data!")
 
-        chunks = self.split_documents(texts)
+        # ✅ 2. save chunks
+        self.save_chunks(docs)
 
-        self.save_chunks(chunks)
-
-        print("Building vector database...")
-
-        self.embedder.build_vector_db(CHUNKS_PATH)
+        # ✅ 3. build vector DB
+        self.build_vector_db()
 
 
 def main():
-
     pipeline = VectorDBPipeline()
-
     pipeline.run()
 
 
