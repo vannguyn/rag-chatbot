@@ -15,7 +15,7 @@ class RAGPipeline:
     def __init__(
         self,
         index_path="embeddings/vector_db/faiss.index",
-        texts_path="embeddings/vector_db/texts.json"
+        texts_path="embeddings/vector_db/docs.json"
     ):
 
         # Embedding model
