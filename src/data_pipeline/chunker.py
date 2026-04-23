@@ -1,21 +1,33 @@
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-import os
-import json
+from src.data_pipeline.cleaner import Cleaner
 class TextSplitter:
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
-        self.splitter = RecursiveCharacterTextSplitter(
-            separators=["\n\n", "\n", " ", ""],
-            chunk_size = chunk_size,
-            chunk_overlap = chunk_overlap,
-            length_function = len,
-        )
+    def __init__(self):
+        pass
     
-    def split(self, text: str):
-        docs = [Document(page_content=text)]
-        return self.splitter.split_documents(docs)
-    
+    def split(self, item: dict):
+        """
+        👉 KHÔNG còn nhận text nữa
+        👉 nhận trực tiếp JSON item
+        """
+
+        from copy import deepcopy
+
+        # 🔥 text dùng để embedding
+        embedding_text = Cleaner.build_embedding_text(item)
+
+        # 🔥 metadata giữ full info (nhưng bỏ review)
+        metadata = Cleaner.remove_reviews(deepcopy(item))
+
+        return [
+            Document(
+                page_content=embedding_text,  # 👉 chỉ embed cái này
+                metadata=metadata             # 👉 dùng để trả về
+            )
+        ]
+
     def save_to_json(self, chunks, path):
+        import json
+
         data = []
 
         for doc in chunks:
@@ -26,5 +38,3 @@ class TextSplitter:
 
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-
-

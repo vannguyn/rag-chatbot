@@ -1,12 +1,10 @@
-import re
-import unicodedata
-
-
 class Cleaner:
 
     @staticmethod
     def clean_text(text: str) -> str:
-        """Normalize Vietnamese text"""
+        import re
+        import unicodedata
+
         if not isinstance(text, str):
             return ""
 
@@ -22,65 +20,24 @@ class Cleaner:
         return text.strip()
 
     @staticmethod
-    def parse_stars(stars: str) -> float:
-        """Convert '5/5' -> 5"""
-        try:
-            return float(stars.split("/")[0])
-        except:
-            return 0
+    def build_embedding_text(item: dict) -> str:
+        name = item.get("location_name", "")
+        category = item.get("category", "")
+        address = item.get("address", "")
+        description = item.get("description", "")
+        # 🔥 xử lý category
+        if isinstance(category, list):
+            category_text = ", ".join(category)
+        else:
+            category_text = str(category)
+
+        return f"{name} ở {address} là địa điểm du lịch với những đặc trưng về {category_text}. {description}"
 
     @staticmethod
-    def dict_to_text(item: dict) -> str:
-        """Convert dict to formatted text"""
-
-        name = Cleaner.clean_text(item.get("location_name", "Unknown Place"))
-        category = Cleaner.clean_text(item.get("category", "Unknown Category"))
-        address = Cleaner.clean_text(item.get("address", "No Address Provided"))
-        rating = item.get("overall_rating", "N/A")
-        rating_count = item.get("rating_count", "0")
-        description = Cleaner.clean_text(item.get("description", "No Description"))
-        url = item.get("url", "")
-
-        reviews = item.get("reviews", [])
-
-        top_reviews = sorted(
-            reviews,
-            key=lambda r: Cleaner.parse_stars(r.get("stars", "0/5")),
-            reverse=True
-        )[:3]
-
-        reviews_text = ""
-
-        for review in top_reviews:
-            stars = review.get("stars", "N/A")
-            comment = Cleaner.clean_text(review.get("comment", "No comment"))
-
-            reviews_text += f'* "{comment}" ({stars})\n'
-
-        text = f"""
-Location: {name}
-Category: {category}
-Address: {address}
-Rating: {rating} ({rating_count} reviews)
-
-Description:
-{description}
-
-Top Reviews:
-{reviews_text if reviews_text else "No reviews available."}
-
-URL: {url}
-"""
-
-        return text.strip()
-
-    @classmethod
-    def json_to_markdown(cls, item: dict) -> str:
-        """Convert JSON dict -> markdown"""
-
-        text = cls.dict_to_text(item)
-
-        markdown = f"""# Location Information
-{text}
-"""
-        return markdown.strip()
+    def remove_reviews(item: dict, keys_to_remove: list = ["reviews", "images", "rating_count", "opening_hours"]) -> dict:
+        """🔥 remove item trước khi trả về"""
+        item = item.copy()
+        for key in keys_to_remove:
+            item.pop(key, None)
+            
+        return item
