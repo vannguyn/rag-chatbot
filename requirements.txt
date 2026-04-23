@@ -17,4 +17,5 @@ langchain-huggingface
 streamlit
 faiss-cpu
 numpy
+requests
 groq
