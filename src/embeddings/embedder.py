@@ -8,70 +8,72 @@ from src.embeddings.embedding_model import EmbeddingModel
 
 class Embedder:
     def __init__(self):
-        """Initialize Embedder with hard paths"""
-
-        # ===== HARD PATH =====
         self.data_path = "data"
         self.vector_db_path = "embeddings/vector_db"
-        self.embedding_model_path = "embeddings/paraphrase-multilingual-MiniLM-L12-v2"
 
-        # tạo thư mục nếu chưa có
-        # os.makedirs(self.vector_db_path, exist_ok=True)
+        os.makedirs(self.vector_db_path, exist_ok=True)
 
-        # load embedding model
         print("Loading embedding model...")
         self.embedding_model = EmbeddingModel()
         print("Embedding model loaded!")
 
     def load_chunks(self, path=None):
-        """Load chunks from JSON"""
-
+        """
+        👉 Load cả content + metadata
+        """
         if path is None:
             path = os.path.join(self.data_path, "chunks.json")
-
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Chunks file not found: {path}")
 
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        texts = []
-        for item in data:
-            if isinstance(item, dict):
-                texts.append(item.get("content", ""))
-            else:
-                texts.append(item)
+        contents = []
+        metadatas = []
 
-        return texts
+        for item in data:
+            contents.append(item.get("content", ""))
+            metadatas.append(item.get("metadata", {}))
+
+        return contents, metadatas
 
     def build_vector_db(self, chunks_path=None):
-        """Create FAISS index from chunks"""
+        contents, metadatas = self.load_chunks(chunks_path)
 
-        texts = self.load_chunks(chunks_path)
+        print(f"Loaded {len(contents)} chunks")
 
-        if len(texts) == 0:
-            raise ValueError("No text chunks found!")
-
-        print(f"Loaded {len(texts)} chunks")
-
-        # embedding
-        embeddings = self.embedding_model.embed_docs(texts)
+        # 🔥 embed content (name + address + category)
+        embeddings = self.embedding_model.embed_docs(contents)
         embeddings = np.array(embeddings).astype("float32")
 
-        dim = embeddings.shape[1]
-
-        # tạo FAISS index
+        # 🔥 normalize để dùng cosine similarity
         faiss.normalize_L2(embeddings)
+
+        dim = embeddings.shape[1]
+        print(dim)
+
         index = faiss.IndexFlatIP(dim)
         index.add(embeddings)
 
-        # lưu index
-        index_path = os.path.join(self.vector_db_path, "faiss.index")
-        faiss.write_index(index, index_path)
+        # 🔥 save index
+        faiss.write_index(
+            index,
+            os.path.join(self.vector_db_path, "faiss.index")
+        )
 
-        # lưu text
-        texts_path = os.path.join(self.vector_db_path, "texts.json")
-        with open(texts_path, "w", encoding="utf-8") as f:
-            json.dump(texts, f, ensure_ascii=False, indent=4)
+        # 🔥 save metadata + content (quan trọng)
+        combined_data = []
 
-        print(f"Vector DB created at: {self.vector_db_path}")
+        for content, metadata in zip(contents, metadatas):
+            combined_data.append({
+                "content": content,    # embedding text
+                "metadata": metadata  # full info (no reviews)
+            })
+
+        with open(
+            os.path.join(self.vector_db_path, "docs.json"),
+            "w",
+            encoding="utf-8"
+        ) as f:
+            json.dump(combined_data, f, ensure_ascii=False, indent=4)
+
+        print("✅ Vector DB rebuilt successfully!")
