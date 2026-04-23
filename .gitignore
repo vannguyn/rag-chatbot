@@ -43,4 +43,7 @@ build/
 # Vector database
 vector_db/
 
+ui
+tests
+
 test.py
